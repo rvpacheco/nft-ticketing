@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TicketStatus {
+  PENDING // creado por el promotor, buyer aun no abre el magic link
+  ASSIGNED // buyer hizo onboarding, wallet creada
+  MINTED // cNFT minteado a la wallet del buyer
+  USED // redimido en puerta
+  REVOKED // anulado por reasignacion u otra causa
+}
+
+enum RedemptionResult {
+  GRANTED
+  ALREADY_USED
+  EXPIRED_QR
+  INVALID_SIGNATURE
+  OWNERSHIP_MISMATCH
+  TICKET_NOT_FOUND
+}
+
+model Promoter {
+  id          String   @id @default(cuid())
+  privyUserId String   @unique
+  email       String   @unique
+  name        String?
+  createdAt   DateTime @default(now())
+  events      Event[]
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  promoterId String
+  promoter   Promoter @relation(fields: [promoterId], references: [id])
+  name       String
+  venue      String
+  startsAt   DateTime
+  capacity   Int
+  createdAt  DateTime @default(now())
+  tickets    Ticket[]
+}
+
+model Ticket {
+  id            String       @id @default(cuid())
+  eventId       String
+  event         Event        @relation(fields: [eventId], references: [id])
+  buyerEmail    String
+  walletAddress String? // se llena en onboarding (Fase 2)
+  nftAssetId    String? // se llena al mintear (Fase 3)
+  status        TicketStatus @default(PENDING)
+  tier          String       @default("general")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  redemptions   RedemptionLog[]
+  reassignments ReassignmentLog[]
+
+  @@index([eventId, status])
+  @@index([buyerEmail])
+}
+
+model RedemptionLog {
+  id        String           @id @default(cuid())
+  ticketId  String
+  ticket    Ticket           @relation(fields: [ticketId], references: [id])
+  scannerId String // identificador del dispositivo/staff que escaneo
+  result    RedemptionResult
+  // true si el check de ownership on-chain se salto por timeout/sin conexion
+  chainCheckSkipped Boolean  @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([ticketId])
+}
+
+model ReassignmentLog {
+  id            String   @id @default(cuid())
+  ticketId      String
+  ticket        Ticket   @relation(fields: [ticketId], references: [id])
+  fromEmail     String
+  toEmail       String
+  oldNftAssetId String?
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([ticketId])
+}
