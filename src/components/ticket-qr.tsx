@@ -2,7 +2,7 @@
 
 import { useSignMessage, useWallets } from "@privy-io/react-auth/solana";
 import bs58 from "bs58";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { QR_TTL_MS, qrMessage, type QrPayload } from "@/lib/qr";
 
@@ -24,15 +24,28 @@ export function TicketQr({
   const [error, setError] = useState<string | null>(null);
 
   const wallet = wallets.find((w) => w.address === walletAddress);
+  const hasWallet = !!wallet;
+
+  // Los hooks de Privy devuelven objetos/funciones con identidad nueva en
+  // cada render: si rotate() dependiera de ellos directamente, cada firma
+  // provocaria re-render -> nueva dependencia -> nueva firma (loop).
+  // Refs siempre actualizadas + deps estables rompen ese ciclo.
+  const walletRef = useRef(wallet);
+  walletRef.current = wallet;
+  const signRef = useRef(signMessage);
+  signRef.current = signMessage;
+  const rotating = useRef(false);
 
   const rotate = useCallback(async () => {
-    if (!wallet) return;
+    const w = walletRef.current;
+    if (!w || rotating.current) return;
+    rotating.current = true;
     try {
       const exp = Date.now() + QR_TTL_MS;
       const nonce = crypto.randomUUID();
-      const { signature } = await signMessage({
+      const { signature } = await signRef.current({
         message: new TextEncoder().encode(qrMessage(ticketId, exp, nonce)),
-        wallet,
+        wallet: w,
       });
       const payload: QrPayload = {
         t: ticketId,
@@ -46,16 +59,18 @@ export function TicketQr({
     } catch (err) {
       console.error("Firma del QR fallo:", err);
       setError("No se pudo firmar el QR. Recarga la página.");
+    } finally {
+      rotating.current = false;
     }
-  }, [wallet, signMessage, ticketId]);
+  }, [ticketId]);
 
-  // Rotacion: primer QR al montar, luego cada ROTATE_MS
+  // Rotacion: primer QR cuando la wallet esta lista, luego cada ROTATE_MS
   useEffect(() => {
-    if (!ready || !wallet) return;
+    if (!ready || !hasWallet) return;
     rotate();
     const interval = setInterval(rotate, ROTATE_MS);
     return () => clearInterval(interval);
-  }, [ready, wallet, rotate]);
+  }, [ready, hasWallet, rotate]);
 
   // Cuenta regresiva visual
   useEffect(() => {
