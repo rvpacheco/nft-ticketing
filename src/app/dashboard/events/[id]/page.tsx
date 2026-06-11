@@ -54,6 +54,20 @@ export default function EventPage({
     if (ready && authenticated) load();
   }, [ready, authenticated, load]);
 
+  async function retryMint(ticketId: string) {
+    setError(null);
+    const token = await getAccessToken();
+    const res = await fetch(`/api/tickets/${ticketId}/mint`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Error minteando el ticket");
+    }
+    await load();
+  }
+
   async function addTicket(formData: FormData) {
     setSaving(true);
     setError(null);
@@ -150,6 +164,15 @@ export default function EventPage({
                 <span className={`rounded px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[t.status]}`}>
                   {t.status}
                 </span>
+                {t.status === "ASSIGNED" && (
+                  <button
+                    onClick={() => retryMint(t.id)}
+                    className="ml-2 text-xs underline"
+                    title="Reintentar el mint del cNFT"
+                  >
+                    Mintear
+                  </button>
+                )}
               </td>
               <td className="text-gray-500">
                 {new Date(t.createdAt).toLocaleDateString()}

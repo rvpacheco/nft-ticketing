@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBuyerContext } from "@/lib/auth";
+import { mintAssignedTicketsForEmail } from "@/lib/mint";
 import { prisma } from "@/lib/prisma";
 
 // Onboarding del comprador: asocia su wallet embebida a todos sus
@@ -22,5 +23,9 @@ export async function POST(req: Request) {
     data: { walletAddress: buyer.walletAddress, status: "ASSIGNED" },
   });
 
-  return NextResponse.json({ claimed: count });
+  // Mintea los recien asignados (y cualquier ASSIGNED previo cuyo mint
+  // haya fallado). Si un mint falla, el ticket queda en ASSIGNED.
+  const minted = await mintAssignedTicketsForEmail(buyer.email);
+
+  return NextResponse.json({ claimed: count, minted });
 }

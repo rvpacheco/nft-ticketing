@@ -8,6 +8,7 @@ type MyTicket = {
   tier: string;
   status: "PENDING" | "ASSIGNED" | "MINTED" | "USED" | "REVOKED";
   walletAddress: string | null;
+  nftAssetId: string | null;
   event: { name: string; venue: string; startsAt: string };
 };
 
@@ -116,6 +117,19 @@ export default function MyTicketsPage() {
             {t.walletAddress && (
               <div className="mt-3 truncate text-xs text-gray-400">
                 Wallet: {t.walletAddress}
+              </div>
+            )}
+            {t.nftAssetId && (
+              <div className="mt-1 truncate text-xs text-gray-400">
+                NFT:{" "}
+                <a
+                  href={`https://solscan.io/token/${t.nftAssetId}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  {t.nftAssetId}
+                </a>
               </div>
             )}
             <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
