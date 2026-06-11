@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "dev:lan": "next dev -H 0.0.0.0 --experimental-https"
+    "dev:lan": "next dev -H 0.0.0.0 --experimental-https",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@metaplex-foundation/mpl-bubblegum": "^5.0.2",
