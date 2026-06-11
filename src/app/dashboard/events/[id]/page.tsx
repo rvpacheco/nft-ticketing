@@ -68,6 +68,28 @@ export default function EventPage({
     await load();
   }
 
+  async function reassign(ticketId: string, currentEmail: string) {
+    const newEmail = window.prompt(
+      `Reasignar ticket de ${currentEmail} a (nuevo email):`,
+    );
+    if (!newEmail) return;
+    setError(null);
+    const token = await getAccessToken();
+    const res = await fetch(`/api/tickets/${ticketId}/reassign`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newEmail }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      setError(body?.error ?? "Error reasignando");
+    }
+    await load();
+  }
+
   async function addTicket(formData: FormData) {
     setSaving(true);
     setError(null);
@@ -153,6 +175,7 @@ export default function EventPage({
             <th>Tier</th>
             <th>Estado</th>
             <th>Creado</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -177,11 +200,22 @@ export default function EventPage({
               <td className="text-gray-500">
                 {new Date(t.createdAt).toLocaleDateString()}
               </td>
+              <td>
+                {t.status !== "USED" && t.status !== "REVOKED" && (
+                  <button
+                    onClick={() => reassign(t.id, t.buyerEmail)}
+                    className="text-xs underline"
+                    title="Pasar el ticket a otro email (typo o reventa)"
+                  >
+                    Reasignar
+                  </button>
+                )}
+              </td>
             </tr>
           ))}
           {event.tickets.length === 0 && (
             <tr>
-              <td colSpan={4} className="py-4 text-gray-500">
+              <td colSpan={5} className="py-4 text-gray-500">
                 Sin tickets todavía. Crea el primero con el email del comprador.
               </td>
             </tr>
