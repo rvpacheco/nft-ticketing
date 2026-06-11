@@ -22,6 +22,7 @@ enum RedemptionResult {
   INVALID_SIGNATURE
   OWNERSHIP_MISMATCH
   TICKET_NOT_FOUND
+  NOT_AUTHORIZED // el scanner no es staff del promotor dueno del evento
 }
 
 model Promoter {
@@ -31,6 +32,21 @@ model Promoter {
   name        String?
   createdAt   DateTime @default(now())
   events      Event[]
+  staff       Staff[]
+}
+
+// Porteros autorizados a escanear los eventos de un promotor.
+// Entran a /scan con login Privy del email registrado aqui.
+model Staff {
+  id         String   @id @default(cuid())
+  promoterId String
+  promoter   Promoter @relation(fields: [promoterId], references: [id])
+  email      String
+  name       String?
+  createdAt  DateTime @default(now())
+
+  @@unique([promoterId, email])
+  @@index([email])
 }
 
 model Event {

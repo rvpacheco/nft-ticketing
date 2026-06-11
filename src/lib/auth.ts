@@ -25,6 +25,34 @@ export async function getAuthedPromoter(req: Request) {
 }
 
 /**
+ * Contexto de quien escanea en puerta: puede ser un promotor (sus
+ * propios eventos) y/o staff registrado por uno o varios promotores.
+ * Devuelve los promoterIds cuyos eventos puede canjear, o null si no
+ * esta autorizado como ninguno.
+ */
+export async function getScannerContext(req: Request) {
+  const claims = await verifyRequest(req);
+  if (!claims) return null;
+
+  const user = await privy.getUserById(claims.userId);
+  const email = user.email?.address?.toLowerCase();
+  if (!email) return null;
+
+  const [promoter, staffRows] = await Promise.all([
+    prisma.promoter.findUnique({ where: { privyUserId: claims.userId } }),
+    prisma.staff.findMany({ where: { email } }),
+  ]);
+
+  const promoterIds = [
+    ...(promoter ? [promoter.id] : []),
+    ...staffRows.map((s) => s.promoterId),
+  ];
+  if (promoterIds.length === 0) return null;
+
+  return { scannerId: email, promoterIds };
+}
+
+/**
  * Contexto del comprador autenticado: email y wallet Solana embebida.
  * walletAddress puede ser null si Privy aun no termino de crear la wallet.
  */

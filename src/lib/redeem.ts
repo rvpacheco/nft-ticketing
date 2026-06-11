@@ -18,19 +18,21 @@ export type RedeemOutcome = {
 /**
  * Cadena de verificacion del QR de entrada. Orden:
  *  1. ticket existe y esta en un estado canjeable
- *  2. QR no expirado (con margen por relojes)
- *  3. firma ed25519 valida de la wallet del ticket
- *  4. ownership on-chain via DAS (tolerante a timeout: skip + log)
- *  5. update atomico MINTED -> USED (imposible doble entrada)
+ *  2. el scanner es promotor/staff del evento del ticket
+ *  3. QR no expirado (con margen por relojes)
+ *  4. firma ed25519 valida de la wallet del ticket
+ *  5. ownership on-chain via DAS (tolerante a timeout: skip + log)
+ *  6. update atomico MINTED -> USED (imposible doble entrada)
  * Todos los intentos quedan en RedemptionLog.
  */
 export async function redeemTicket(
   payload: QrPayload,
   scannerId: string,
+  allowedPromoterIds: string[],
 ): Promise<RedeemOutcome> {
   const ticket = await prisma.ticket.findUnique({
     where: { id: payload.t },
-    include: { event: { select: { name: true } } },
+    include: { event: { select: { name: true, promoterId: true } } },
   });
 
   // Sin ticket no hay FK para loguear; respuesta directa.
@@ -65,6 +67,14 @@ export async function redeemTicket(
       chainCheckSkipped,
     };
   };
+
+  // 2. El scanner debe ser promotor/staff del evento de ESTE ticket
+  if (!allowedPromoterIds.includes(ticket.event.promoterId)) {
+    return finish(
+      "NOT_AUTHORIZED",
+      "No estas autorizado para este evento",
+    );
+  }
 
   if (ticket.status === "PENDING" || ticket.status === "ASSIGNED") {
     return finish("TICKET_NOT_FOUND", "El ticket aun no tiene NFT emitido");

@@ -3,6 +3,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { StaffPanel } from "@/components/staff-panel";
 
 type EventRow = {
   id: string;
@@ -141,6 +142,8 @@ export default function DashboardPage() {
           <li className="text-gray-500">Todavía no tienes eventos.</li>
         )}
       </ul>
+
+      <StaffPanel />
     </main>
   );
 }

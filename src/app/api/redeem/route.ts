@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import { getAuthedPromoter } from "@/lib/auth";
+import { getScannerContext } from "@/lib/auth";
 import { redeemTicket } from "@/lib/redeem";
 import type { QrPayload } from "@/lib/qr";
 
-// Canje en puerta. Solo staff autenticado (promotor) puede escanear.
+// Canje en puerta. Solo promotores o staff registrado pueden escanear.
 export async function POST(req: Request) {
-  const promoter = await getAuthedPromoter(req);
-  if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const scanner = await getScannerContext(req);
+  if (!scanner) {
+    return NextResponse.json(
+      {
+        granted: false,
+        result: "NOT_AUTHORIZED",
+        message: "Tu email no esta registrado como staff de ningun evento",
+      },
+      { status: 403 },
+    );
   }
 
   let payload: QrPayload;
@@ -30,6 +37,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const outcome = await redeemTicket(payload, promoter.email);
+  const outcome = await redeemTicket(
+    payload,
+    scanner.scannerId,
+    scanner.promoterIds,
+  );
   return NextResponse.json(outcome, { status: outcome.granted ? 200 : 409 });
 }
