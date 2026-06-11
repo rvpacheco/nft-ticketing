@@ -2,6 +2,7 @@
 
 import { usePrivy } from "@privy-io/react-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TicketQr } from "@/components/ticket-qr";
 
 type MyTicket = {
   id: string;
@@ -132,9 +133,17 @@ export default function MyTicketsPage() {
                 </a>
               </div>
             )}
-            <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
-              El QR de entrada se habilitará el día del evento
-            </div>
+            {t.status === "MINTED" && t.walletAddress ? (
+              <TicketQr ticketId={t.id} walletAddress={t.walletAddress} />
+            ) : t.status === "USED" ? (
+              <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
+                Este ticket ya fue usado
+              </div>
+            ) : (
+              <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
+                El QR aparecerá cuando tu ticket esté listo
+              </div>
+            )}
           </li>
         ))}
       </ul>

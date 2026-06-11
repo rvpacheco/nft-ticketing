@@ -10,6 +10,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         loginMethods: ["email"],
         embeddedWallets: {
           solana: { createOnLogin: "all-users" },
+          // Firma silenciosa: el QR rotativo firma cada ~45s y un modal
+          // de confirmacion por firma haria inusable la puerta
+          showWalletUIs: false,
         },
       }}
     >
