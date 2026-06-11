@@ -8,12 +8,20 @@ export default function Home() {
         Tickets de eventos como NFTs en Solana. Vende por WhatsApp, valida en
         puerta con QR de un solo uso.
       </p>
-      <Link
-        href="/dashboard"
-        className="rounded-lg bg-black px-6 py-3 font-medium text-white dark:bg-white dark:text-black"
-      >
-        Entrar al dashboard
-      </Link>
+      <div className="flex gap-4">
+        <Link
+          href="/dashboard"
+          className="rounded-lg bg-black px-6 py-3 font-medium text-white dark:bg-white dark:text-black"
+        >
+          Soy promotor
+        </Link>
+        <Link
+          href="/tickets"
+          className="rounded-lg border border-gray-400 px-6 py-3 font-medium"
+        >
+          Ver mis tickets
+        </Link>
+      </div>
     </main>
   );
 }

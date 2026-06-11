@@ -23,3 +23,27 @@ export async function getAuthedPromoter(req: Request) {
   if (!claims) return null;
   return prisma.promoter.findUnique({ where: { privyUserId: claims.userId } });
 }
+
+/**
+ * Contexto del comprador autenticado: email y wallet Solana embebida.
+ * walletAddress puede ser null si Privy aun no termino de crear la wallet.
+ */
+export async function getBuyerContext(req: Request) {
+  const claims = await verifyRequest(req);
+  if (!claims) return null;
+
+  const user = await privy.getUserById(claims.userId);
+  const email = user.email?.address?.toLowerCase();
+  if (!email) return null;
+
+  const solanaWallet = user.linkedAccounts.find(
+    (acc) =>
+      acc.type === "wallet" &&
+      acc.chainType === "solana" &&
+      acc.walletClientType === "privy",
+  );
+  const walletAddress =
+    solanaWallet && "address" in solanaWallet ? solanaWallet.address : null;
+
+  return { userId: claims.userId, email, walletAddress };
+}
