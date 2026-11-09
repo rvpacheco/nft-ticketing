@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 import { QR_TTL_MS, qrMessage, type QrPayload } from "@/lib/qr";
 
-// Rota un poco antes de expirar para que el QR escaneado siempre sea valido
+// Rotate a bit before expiry so the scanned QR is always still valid
 const ROTATE_MS = QR_TTL_MS - 5_000;
 
 export function TicketQr({
@@ -26,10 +26,10 @@ export function TicketQr({
   const wallet = wallets.find((w) => w.address === walletAddress);
   const hasWallet = !!wallet;
 
-  // Los hooks de Privy devuelven objetos/funciones con identidad nueva en
-  // cada render: si rotate() dependiera de ellos directamente, cada firma
-  // provocaria re-render -> nueva dependencia -> nueva firma (loop).
-  // Refs siempre actualizadas + deps estables rompen ese ciclo.
+  // Privy hooks return objects/functions with a new identity on
+  // every render: if rotate() depended on them directly, each signature
+  // would trigger a re-render -> new dependency -> new signature (loop).
+  // Always-fresh refs + stable deps break that cycle.
   const walletRef = useRef(wallet);
   walletRef.current = wallet;
   const signRef = useRef(signMessage);
@@ -57,14 +57,14 @@ export function TicketQr({
       setExpiresAt(exp);
       setError(null);
     } catch (err) {
-      console.error("Firma del QR fallo:", err);
-      setError("No se pudo firmar el QR. Recarga la página.");
+      console.error("QR signing failed:", err);
+      setError("Could not sign the QR. Reload the page.");
     } finally {
       rotating.current = false;
     }
   }, [ticketId]);
 
-  // Rotacion: primer QR cuando la wallet esta lista, luego cada ROTATE_MS
+  // Rotation: first QR once the wallet is ready, then every ROTATE_MS
   useEffect(() => {
     if (!ready || !hasWallet) return;
     rotate();
@@ -72,7 +72,7 @@ export function TicketQr({
     return () => clearInterval(interval);
   }, [ready, hasWallet, rotate]);
 
-  // Cuenta regresiva visual
+  // Visual countdown
   useEffect(() => {
     const tick = setInterval(() => {
       setSecondsLeft(Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000)));
@@ -81,13 +81,13 @@ export function TicketQr({
   }, [expiresAt]);
 
   if (!ready) {
-    return <QrShell>Conectando con tu wallet…</QrShell>;
+    return <QrShell>Connecting to your wallet…</QrShell>;
   }
   if (!wallet) {
     return (
       <QrShell>
-        Tu wallet no está disponible en esta sesión. Cierra sesión y vuelve a
-        entrar con tu email.
+        Your wallet is not available in this session. Log out and log back
+        in with your email.
       </QrShell>
     );
   }
@@ -102,8 +102,8 @@ export function TicketQr({
     <div className="mt-3 flex flex-col items-center gap-2 rounded bg-white p-4">
       <QRCode value={qrValue} size={196} />
       <div className="text-xs text-gray-500">
-        Se renueva en {secondsLeft}s — manten esta pantalla abierta en la
-        entrada
+        Refreshes in {secondsLeft}s — keep this screen open at the
+        door
       </div>
     </div>
   );

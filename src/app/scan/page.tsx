@@ -49,12 +49,12 @@ export default function ScanPage() {
             setOutcome({
               granted: false,
               result: "NETWORK",
-              message: "Sin conexión — reintenta",
+              message: "No connection — retry",
             });
           }
         },
         () => {
-          // frames sin QR: ruido normal, no hacer nada
+          // frames without a QR: normal noise, do nothing
         },
       )
       .then(() => setScanning(true))
@@ -64,8 +64,8 @@ export default function ScanPage() {
       scannerRef.current = null;
       scanner.stop().catch(() => {});
     };
-    // getAccessToken cambia de identidad por render (hooks de Privy);
-    // solo importa re-correr cuando cambia el estado de auth
+    // getAccessToken changes identity every render (Privy hooks);
+    // we only need to re-run when the auth state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, authenticated]);
 
@@ -79,12 +79,12 @@ export default function ScanPage() {
   if (!authenticated) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <h1 className="text-2xl font-bold">Scanner de puerta</h1>
+        <h1 className="text-2xl font-bold">Door scanner</h1>
         <button
           onClick={login}
           className="rounded-lg bg-black px-6 py-3 font-medium text-white dark:bg-white dark:text-black"
         >
-          Iniciar sesión (staff)
+          Log in (staff)
         </button>
       </main>
     );
@@ -92,11 +92,11 @@ export default function ScanPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col p-4">
-      <h1 className="mb-3 text-center text-xl font-bold">Scanner de puerta</h1>
+      <h1 className="mb-3 text-center text-xl font-bold">Door scanner</h1>
 
       {cameraError && (
         <p className="mb-3 rounded bg-red-100 p-3 text-sm text-red-800">
-          No se pudo abrir la cámara: {cameraError}. La cámara requiere HTTPS o
+          Could not open the camera: {cameraError}. The camera requires HTTPS or
           localhost.
         </p>
       )}
@@ -107,7 +107,7 @@ export default function ScanPage() {
       />
       {!outcome && scanning && (
         <p className="mt-3 text-center text-sm text-gray-500">
-          Apunta al QR del ticket
+          Point at the ticket QR
         </p>
       )}
 
@@ -130,14 +130,14 @@ export default function ScanPage() {
           )}
           {outcome.chainCheckSkipped && (
             <div className="text-xs opacity-75">
-              (verificación on-chain omitida por timeout)
+              (on-chain check skipped due to timeout)
             </div>
           )}
           <button
             onClick={nextScan}
             className="mt-4 rounded-lg bg-white px-6 py-3 font-semibold text-black"
           >
-            Escanear siguiente
+            Scan next
           </button>
         </div>
       )}

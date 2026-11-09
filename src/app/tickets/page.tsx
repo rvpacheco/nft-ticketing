@@ -14,11 +14,11 @@ type MyTicket = {
 };
 
 const STATUS_LABEL: Record<MyTicket["status"], string> = {
-  PENDING: "Procesando",
-  ASSIGNED: "Confirmado",
-  MINTED: "Listo (NFT emitido)",
-  USED: "Usado",
-  REVOKED: "Anulado",
+  PENDING: "Processing",
+  ASSIGNED: "Confirmed",
+  MINTED: "Ready (NFT issued)",
+  USED: "Used",
+  REVOKED: "Revoked",
 };
 
 const CLAIM_RETRIES = 5;
@@ -35,7 +35,7 @@ export default function MyTicketsPage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setTickets(await res.json());
-    else setError("No se pudieron cargar tus tickets");
+    else setError("Could not load your tickets");
   }, [getAccessToken]);
 
   useEffect(() => {
@@ -43,8 +43,8 @@ export default function MyTicketsPage() {
     claiming.current = true;
     (async () => {
       const token = await getAccessToken();
-      // La wallet embebida puede tardar unos segundos en crearse tras el
-      // login; el claim devuelve 409 hasta que exista, asi que reintentamos.
+      // The embedded wallet can take a few seconds to be created after
+      // login; claim returns 409 until it exists, so we retry.
       for (let i = 0; i < CLAIM_RETRIES; i++) {
         const res = await fetch("/api/tickets/claim", {
           method: "POST",
@@ -62,15 +62,15 @@ export default function MyTicketsPage() {
   if (!authenticated) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <h1 className="text-2xl font-bold">Mis tickets</h1>
+        <h1 className="text-2xl font-bold">My tickets</h1>
         <p className="max-w-sm text-center text-gray-500">
-          Inicia sesión con el email con el que compraste tu ticket.
+          Log in with the email you bought your ticket with.
         </p>
         <button
           onClick={login}
           className="rounded-lg bg-black px-6 py-3 font-medium text-white dark:bg-white dark:text-black"
         >
-          Ver mis tickets
+          View my tickets
         </button>
       </main>
     );
@@ -79,21 +79,21 @@ export default function MyTicketsPage() {
   return (
     <main className="mx-auto w-full max-w-xl flex-1 p-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis tickets</h1>
+        <h1 className="text-2xl font-bold">My tickets</h1>
         <div className="flex items-center gap-3 text-sm text-gray-500">
           <span>{user?.email?.address}</span>
           <button onClick={logout} className="underline">
-            Salir
+            Log out
           </button>
         </div>
       </div>
 
       {error && <p className="mb-4 text-red-600">{error}</p>}
-      {tickets === null && <p className="text-gray-500">Buscando tus tickets…</p>}
+      {tickets === null && <p className="text-gray-500">Looking for your tickets…</p>}
       {tickets?.length === 0 && (
         <p className="text-gray-500">
-          No hay tickets asociados a este email. Si acabas de comprar, pide al
-          promotor que verifique el email que registró.
+          No tickets linked to this email. If you just bought one, ask the
+          promoter to check the email they registered.
         </p>
       )}
 
@@ -137,11 +137,11 @@ export default function MyTicketsPage() {
               <TicketQr ticketId={t.id} walletAddress={t.walletAddress} />
             ) : t.status === "USED" ? (
               <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
-                Este ticket ya fue usado
+                This ticket has already been used
               </div>
             ) : (
               <div className="mt-3 rounded bg-gray-50 p-3 text-center text-sm text-gray-400 dark:bg-gray-900">
-                El QR aparecerá cuando tu ticket esté listo
+                The QR will appear when your ticket is ready
               </div>
             )}
           </li>

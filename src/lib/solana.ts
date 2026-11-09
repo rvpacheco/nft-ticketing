@@ -13,7 +13,7 @@ import {
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import type { Event, Ticket } from "@/generated/prisma/client";
 
-// Umi singleton con el keypair del servidor (paga y firma los mints)
+// Umi singleton with the server keypair (pays for and signs mints)
 const globalForUmi = globalThis as unknown as { umi?: Umi };
 
 function getUmi(): Umi {
@@ -21,7 +21,7 @@ function getUmi(): Umi {
   const rpc = process.env.SOLANA_RPC_URL;
   const secret = process.env.SERVER_WALLET_SECRET_KEY;
   if (!rpc || !secret) {
-    throw new Error("Faltan SOLANA_RPC_URL o SERVER_WALLET_SECRET_KEY en .env");
+    throw new Error("Missing SOLANA_RPC_URL or SERVER_WALLET_SECRET_KEY in .env");
   }
   const umi = createUmi(rpc);
   umi.use(
@@ -36,16 +36,16 @@ function getUmi(): Umi {
 }
 
 /**
- * Mintea el cNFT de un ticket a la wallet del comprador.
- * Devuelve el assetId del cNFT (identificador para DAS y la DB).
+ * Mints a ticket's cNFT to the buyer's wallet.
+ * Returns the cNFT assetId (identifier for DAS and the DB).
  */
 export async function mintTicketNft(
   ticket: Ticket,
   event: Pick<Event, "name">,
 ): Promise<string> {
   const treeAddress = process.env.MERKLE_TREE_ADDRESS;
-  if (!treeAddress) throw new Error("Falta MERKLE_TREE_ADDRESS en .env");
-  if (!ticket.walletAddress) throw new Error("Ticket sin walletAddress");
+  if (!treeAddress) throw new Error("Missing MERKLE_TREE_ADDRESS in .env");
+  if (!ticket.walletAddress) throw new Error("Ticket has no walletAddress");
 
   const umi = getUmi();
   const merkleTree = publicKey(treeAddress);
@@ -76,9 +76,9 @@ export async function mintTicketNft(
 }
 
 /**
- * Igual que parseLeafFromMintV1Transaction de Bubblegum, pero con
- * commitment explicito y reintentos: en devnet la transaccion no
- * siempre esta disponible via getTransaction apenas se confirma.
+ * Same as Bubblegum's parseLeafFromMintV1Transaction, but with
+ * explicit commitment and retries: on devnet the transaction isn't
+ * always available via getTransaction right after it confirms.
  */
 async function parseLeafWithRetry(umi: Umi, signature: TransactionSignature) {
   for (let attempt = 0; attempt < 15; attempt++) {
@@ -91,5 +91,5 @@ async function parseLeafWithRetry(umi: Umi, signature: TransactionSignature) {
     }
     await new Promise((r) => setTimeout(r, 2000));
   }
-  throw new Error("No se pudo leer la transaccion del mint tras confirmarse");
+  throw new Error("Could not read the mint transaction after confirmation");
 }

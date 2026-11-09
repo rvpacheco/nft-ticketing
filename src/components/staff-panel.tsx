@@ -45,7 +45,7 @@ export function StaffPanel() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "Error agregando staff");
+        setError(body?.error ?? "Error adding staff");
         return;
       }
       await load();
@@ -65,22 +65,22 @@ export function StaffPanel() {
 
   return (
     <section className="mt-10 rounded-lg border border-gray-300 p-4 dark:border-gray-700">
-      <h2 className="font-semibold">Staff de puerta</h2>
+      <h2 className="font-semibold">Door staff</h2>
       <p className="mb-3 text-sm text-gray-500">
-        Estos emails pueden entrar a /scan y canjear tickets de tus eventos.
+        These emails can open /scan and redeem tickets for your events.
       </p>
 
       <form action={addStaff} className="mb-4 flex gap-3">
         <input
           name="email"
           type="email"
-          placeholder="email del portero"
+          placeholder="door staff email"
           required
           className="flex-1 rounded border px-3 py-2 dark:bg-transparent"
         />
         <input
           name="name"
-          placeholder="nombre (opcional)"
+          placeholder="name (optional)"
           className="w-40 rounded border px-3 py-2 dark:bg-transparent"
         />
         <button
@@ -88,7 +88,7 @@ export function StaffPanel() {
           disabled={saving}
           className="rounded bg-black px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {saving ? "…" : "Agregar"}
+          {saving ? "…" : "Add"}
         </button>
       </form>
 
@@ -108,14 +108,14 @@ export function StaffPanel() {
               onClick={() => removeStaff(s.id)}
               className="text-xs text-red-600 underline"
             >
-              Quitar
+              Remove
             </button>
           </li>
         ))}
         {staff.length === 0 && (
           <li className="text-sm text-gray-500">
-            Sin staff registrado. Tú siempre puedes escanear tus propios
-            eventos.
+            No staff registered. You can always scan your own
+            events.
           </li>
         )}
       </ul>

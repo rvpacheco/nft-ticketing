@@ -1,7 +1,7 @@
-// Test de concurrencia del canje: dos scans simultaneos del mismo QR
-// deben dejar exactamente UN GRANTED y un ALREADY_USED (riesgo #4 del
-// plan). Tambien cubre QR vencido, firma invalida y staff no autorizado.
-// Crea datos de prueba en la DB y los limpia al final.
+// Redemption concurrency test: two simultaneous scans of the same QR
+// must leave exactly ONE GRANTED and one ALREADY_USED (risk #4 of the
+// plan). Also covers an expired QR, an invalid signature and unauthorized staff.
+// Creates test data in the DB and cleans it up at the end.
 // Uso: npx tsx scripts/test-double-scan.ts
 import "dotenv/config";
 import { Keypair } from "@solana/web3.js";
@@ -38,7 +38,7 @@ async function main() {
   const event = await prisma.event.create({
     data: {
       promoterId: promoter.id,
-      name: "Evento de prueba concurrencia",
+      name: "Concurrency test event",
       venue: "test",
       startsAt: new Date(),
       capacity: 10,
@@ -52,7 +52,7 @@ async function main() {
         buyerEmail: "buyer@test.local",
         walletAddress: buyer.publicKey.toBase58(),
         status: "MINTED",
-        // sin nftAssetId: el check on-chain se salta (chainCheckSkipped)
+        // no nftAssetId: the on-chain check is skipped (chainCheckSkipped)
       },
     });
 
@@ -66,41 +66,41 @@ async function main() {
     ]);
     const granted = [a, b].filter((r) => r.result === "GRANTED").length;
     const alreadyUsed = [a, b].filter((r) => r.result === "ALREADY_USED").length;
-    check(granted === 1, `doble-scan concurrente: 1 GRANTED (hubo ${granted})`);
-    check(alreadyUsed === 1, `doble-scan concurrente: 1 ALREADY_USED (hubo ${alreadyUsed})`);
+    check(granted === 1, `concurrent double scan: 1 GRANTED (got ${granted})`);
+    check(alreadyUsed === 1, `concurrent double scan: 1 ALREADY_USED (got ${alreadyUsed})`);
 
     // 2. Re-scan posterior: ALREADY_USED
     const c = await redeemTicket(signedPayload(t1.id, buyer), "scanner-A@test.local", [promoter.id]);
-    check(c.result === "ALREADY_USED", `re-scan posterior: ALREADY_USED (fue ${c.result})`);
+    check(c.result === "ALREADY_USED", `later re-scan: ALREADY_USED (got ${c.result})`);
 
     // 3. QR vencido
     const t2 = await makeTicket();
     const expired = signedPayload(t2.id, buyer, Date.now() - 60_000);
     const d = await redeemTicket(expired, "scanner-A@test.local", [promoter.id]);
-    check(d.result === "EXPIRED_QR", `QR vencido: EXPIRED_QR (fue ${d.result})`);
+    check(d.result === "EXPIRED_QR", `expired QR: EXPIRED_QR (got ${d.result})`);
 
-    // 4. Firma de otra wallet
+    // 4. Signature from another wallet
     const impostor = Keypair.generate();
     const forged = signedPayload(t2.id, impostor);
     const e2 = await redeemTicket(forged, "scanner-A@test.local", [promoter.id]);
-    check(e2.result === "INVALID_SIGNATURE", `firma ajena: INVALID_SIGNATURE (fue ${e2.result})`);
+    check(e2.result === "INVALID_SIGNATURE", `foreign signature: INVALID_SIGNATURE (got ${e2.result})`);
 
-    // 5. Scanner de otro promotor
+    // 5. Scanner from another promoter
     const f = await redeemTicket(signedPayload(t2.id, buyer), "scanner-X@test.local", ["otro-promoter-id"]);
-    check(f.result === "NOT_AUTHORIZED", `staff ajeno: NOT_AUTHORIZED (fue ${f.result})`);
+    check(f.result === "NOT_AUTHORIZED", `foreign staff: NOT_AUTHORIZED (got ${f.result})`);
 
-    // 6. El ticket valido sigue canjeable tras los intentos fallidos
+    // 6. The valid ticket stays redeemable after the failed attempts
     const g = await redeemTicket(signedPayload(t2.id, buyer), "scanner-A@test.local", [promoter.id]);
-    check(g.result === "GRANTED", `canje legitimo tras rechazos: GRANTED (fue ${g.result})`);
+    check(g.result === "GRANTED", `legit redemption after rejections: GRANTED (got ${g.result})`);
   } finally {
-    // Limpieza en orden por FKs
+    // Cleanup in FK order
     await prisma.redemptionLog.deleteMany({ where: { ticket: { eventId: event.id } } });
     await prisma.ticket.deleteMany({ where: { eventId: event.id } });
     await prisma.event.delete({ where: { id: event.id } });
     await prisma.promoter.delete({ where: { id: promoter.id } });
   }
 
-  console.log(failures === 0 ? "\nTodo OK" : `\n${failures} fallas`);
+  console.log(failures === 0 ? "\nAll OK" : `\n${failures} fallas`);
   process.exit(failures === 0 ? 0 : 1);
 }
 

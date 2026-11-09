@@ -6,7 +6,7 @@ export const privy = new PrivyClient(
   process.env.PRIVY_APP_SECRET!,
 );
 
-/** Verifica el Bearer token de Privy y devuelve los claims, o null. */
+/** Verifies the Privy Bearer token and returns the claims, or null. */
 export async function verifyRequest(req: Request) {
   const header = req.headers.get("authorization");
   if (!header?.startsWith("Bearer ")) return null;
@@ -17,7 +17,7 @@ export async function verifyRequest(req: Request) {
   }
 }
 
-/** Devuelve el Promoter autenticado de la request, o null si no existe/no auth. */
+/** Returns the authenticated Promoter for the request, or null if missing/unauthenticated. */
 export async function getAuthedPromoter(req: Request) {
   const claims = await verifyRequest(req);
   if (!claims) return null;
@@ -25,10 +25,10 @@ export async function getAuthedPromoter(req: Request) {
 }
 
 /**
- * Contexto de quien escanea en puerta: puede ser un promotor (sus
- * propios eventos) y/o staff registrado por uno o varios promotores.
- * Devuelve los promoterIds cuyos eventos puede canjear, o null si no
- * esta autorizado como ninguno.
+ * Context for whoever scans at the door: can be a promoter (their
+ * own events) and/or staff registered by one or more promoters.
+ * Returns the promoterIds whose events they can redeem, or null if
+ * they're authorized as neither.
  */
 export async function getScannerContext(req: Request) {
   const claims = await verifyRequest(req);
@@ -53,8 +53,8 @@ export async function getScannerContext(req: Request) {
 }
 
 /**
- * Contexto del comprador autenticado: email y wallet Solana embebida.
- * walletAddress puede ser null si Privy aun no termino de crear la wallet.
+ * Authenticated buyer context: email and embedded Solana wallet.
+ * walletAddress can be null if Privy hasn't finished creating the wallet yet.
  */
 export async function getBuyerContext(req: Request) {
   const claims = await verifyRequest(req);

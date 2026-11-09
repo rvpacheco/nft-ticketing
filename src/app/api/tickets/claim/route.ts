@@ -3,17 +3,17 @@ import { getBuyerContext } from "@/lib/auth";
 import { mintAssignedTicketsForEmail } from "@/lib/mint";
 import { prisma } from "@/lib/prisma";
 
-// Onboarding del comprador: asocia su wallet embebida a todos sus
-// tickets PENDING (puede tener varios, de distintos eventos).
+// Buyer onboarding: links their embedded wallet to all their
+// PENDING tickets (they may have several, across events).
 export async function POST(req: Request) {
   const buyer = await getBuyerContext(req);
   if (!buyer) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!buyer.walletAddress) {
-    // Privy crea la wallet justo despues del login; el cliente reintenta.
+    // Privy creates the wallet right after login; the client retries.
     return NextResponse.json(
-      { error: "Wallet aun no creada, reintenta" },
+      { error: "Wallet not created yet, retry" },
       { status: 409 },
     );
   }
@@ -23,8 +23,8 @@ export async function POST(req: Request) {
     data: { walletAddress: buyer.walletAddress, status: "ASSIGNED" },
   });
 
-  // Mintea los recien asignados (y cualquier ASSIGNED previo cuyo mint
-  // haya fallado). Si un mint falla, el ticket queda en ASSIGNED.
+  // Mint the newly assigned ones (and any earlier ASSIGNED whose mint
+  // failed). If a mint fails, the ticket stays ASSIGNED.
   const minted = await mintAssignedTicketsForEmail(buyer.email);
 
   return NextResponse.json({ claimed: count, minted });

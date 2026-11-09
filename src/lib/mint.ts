@@ -2,10 +2,10 @@ import { prisma } from "./prisma";
 import { mintTicketNft } from "./solana";
 
 /**
- * Mintea un ticket ASSIGNED y lo pasa a MINTED con su assetId.
- * Devuelve el ticket actualizado, o null si no esta en condiciones.
- * Si el mint on-chain falla, lanza: el ticket queda en ASSIGNED y
- * se puede reintentar.
+ * Mints an ASSIGNED ticket and moves it to MINTED with its assetId.
+ * Returns the updated ticket, or null if it isn't eligible.
+ * If the on-chain mint fails, it throws: the ticket stays ASSIGNED and
+ * can be retried.
  */
 export async function mintTicket(ticketId: string) {
   const ticket = await prisma.ticket.findUnique({
@@ -24,7 +24,7 @@ export async function mintTicket(ticketId: string) {
   });
 }
 
-/** Mintea en secuencia todos los tickets ASSIGNED de un email; no lanza. */
+/** Mints all ASSIGNED tickets for an email in sequence; never throws. */
 export async function mintAssignedTicketsForEmail(email: string) {
   const tickets = await prisma.ticket.findMany({
     where: { buyerEmail: email, status: "ASSIGNED" },
@@ -35,7 +35,7 @@ export async function mintAssignedTicketsForEmail(email: string) {
     try {
       if (await mintTicket(id)) minted++;
     } catch (err) {
-      console.error(`Mint fallo para ticket ${id}:`, err);
+      console.error(`Mint failed for ticket ${id}:`, err);
     }
   }
   return minted;

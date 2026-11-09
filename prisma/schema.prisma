@@ -8,11 +8,11 @@ datasource db {
 }
 
 enum TicketStatus {
-  PENDING // creado por el promotor, buyer aun no abre el magic link
-  ASSIGNED // buyer hizo onboarding, wallet creada
-  MINTED // cNFT minteado a la wallet del buyer
-  USED // redimido en puerta
-  REVOKED // anulado por reasignacion u otra causa
+  PENDING // created by the promoter, buyer hasn't opened the magic link yet
+  ASSIGNED // buyer onboarded, wallet created
+  MINTED // cNFT minted to the buyer's wallet
+  USED // redeemed at the door
+  REVOKED // revoked by reassignment or another reason
 }
 
 enum RedemptionResult {
@@ -22,7 +22,7 @@ enum RedemptionResult {
   INVALID_SIGNATURE
   OWNERSHIP_MISMATCH
   TICKET_NOT_FOUND
-  NOT_AUTHORIZED // el scanner no es staff del promotor dueno del evento
+  NOT_AUTHORIZED // the scanner is not staff of the promoter who owns the event
 }
 
 model Promoter {
@@ -35,8 +35,8 @@ model Promoter {
   staff       Staff[]
 }
 
-// Porteros autorizados a escanear los eventos de un promotor.
-// Entran a /scan con login Privy del email registrado aqui.
+// Door staff allowed to scan a promoter's events.
+// They open /scan with a Privy login for the email registered here.
 model Staff {
   id         String   @id @default(cuid())
   promoterId String
@@ -66,8 +66,8 @@ model Ticket {
   eventId       String
   event         Event        @relation(fields: [eventId], references: [id])
   buyerEmail    String
-  walletAddress String? // se llena en onboarding (Fase 2)
-  nftAssetId    String? // se llena al mintear (Fase 3)
+  walletAddress String? // set during onboarding (phase 2)
+  nftAssetId    String? // set when minting (phase 3)
   status        TicketStatus @default(PENDING)
   tier          String       @default("general")
   createdAt     DateTime     @default(now())
@@ -84,9 +84,9 @@ model RedemptionLog {
   id        String           @id @default(cuid())
   ticketId  String
   ticket    Ticket           @relation(fields: [ticketId], references: [id])
-  scannerId String // identificador del dispositivo/staff que escaneo
+  scannerId String // identifier of the device/staff that scanned
   result    RedemptionResult
-  // true si el check de ownership on-chain se salto por timeout/sin conexion
+  // true if the on-chain ownership check was skipped (timeout/offline)
   chainCheckSkipped Boolean  @default(false)
   createdAt DateTime         @default(now())
 

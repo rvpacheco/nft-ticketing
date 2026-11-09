@@ -26,14 +26,14 @@ export default function DashboardPage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setEvents(await res.json());
-    else setError("No se pudieron cargar los eventos");
+    else setError("Could not load events");
   }, [getAccessToken]);
 
   useEffect(() => {
     if (!ready || !authenticated) return;
     (async () => {
       const token = await getAccessToken();
-      // upsert del promotor en nuestra DB antes de pedir datos
+      // upsert the promoter in our DB before fetching data
       await fetch("/api/promoter/sync", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
@@ -62,7 +62,7 @@ export default function DashboardPage() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "Error creando el evento");
+        setError(body?.error ?? "Error creating the event");
         return;
       }
       await loadEvents();
@@ -76,12 +76,12 @@ export default function DashboardPage() {
   if (!authenticated) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <h1 className="text-2xl font-bold">Dashboard del promotor</h1>
+        <h1 className="text-2xl font-bold">Promoter dashboard</h1>
         <button
           onClick={login}
           className="rounded-lg bg-black px-6 py-3 font-medium text-white dark:bg-white dark:text-black"
         >
-          Iniciar sesión con email
+          Log in with email
         </button>
       </main>
     );
@@ -90,11 +90,11 @@ export default function DashboardPage() {
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-8">
       <div className="mb-8 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis eventos</h1>
+        <h1 className="text-2xl font-bold">My events</h1>
         <div className="flex items-center gap-3 text-sm text-gray-500">
           <span>{user?.email?.address}</span>
           <button onClick={logout} className="underline">
-            Salir
+            Log out
           </button>
         </div>
       </div>
@@ -103,17 +103,17 @@ export default function DashboardPage() {
         action={createEvent}
         className="mb-8 grid grid-cols-2 gap-3 rounded-lg border border-gray-300 p-4 dark:border-gray-700"
       >
-        <h2 className="col-span-2 font-semibold">Crear evento</h2>
-        <input name="name" placeholder="Nombre" required className="rounded border px-3 py-2 dark:bg-transparent" />
+        <h2 className="col-span-2 font-semibold">Create event</h2>
+        <input name="name" placeholder="Name" required className="rounded border px-3 py-2 dark:bg-transparent" />
         <input name="venue" placeholder="Venue" required className="rounded border px-3 py-2 dark:bg-transparent" />
         <input name="startsAt" type="datetime-local" required className="rounded border px-3 py-2 dark:bg-transparent" />
-        <input name="capacity" type="number" min={1} placeholder="Capacidad" required className="rounded border px-3 py-2 dark:bg-transparent" />
+        <input name="capacity" type="number" min={1} placeholder="Capacity" required className="rounded border px-3 py-2 dark:bg-transparent" />
         <button
           type="submit"
           disabled={saving}
           className="col-span-2 rounded bg-black py-2 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {saving ? "Creando…" : "Crear"}
+          {saving ? "Creating…" : "Create"}
         </button>
       </form>
 
@@ -139,7 +139,7 @@ export default function DashboardPage() {
           </li>
         ))}
         {events.length === 0 && (
-          <li className="text-gray-500">Todavía no tienes eventos.</li>
+          <li className="text-gray-500">You do not have any events yet.</li>
         )}
       </ul>
 

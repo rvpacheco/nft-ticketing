@@ -1,7 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
-// Singleton: evita agotar conexiones de Neon con el hot reload de dev
+// Singleton: avoids exhausting Neon connections with dev hot reload
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 export const prisma =

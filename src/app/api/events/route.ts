@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: Request) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const events = await prisma.event.findMany({
@@ -20,20 +20,20 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await req.json();
   const { name, venue, startsAt, capacity } = body ?? {};
   if (!name || !venue || !startsAt || !Number.isInteger(capacity) || capacity < 1) {
     return NextResponse.json(
-      { error: "Campos requeridos: name, venue, startsAt, capacity (entero > 0)" },
+      { error: "Required fields: name, venue, startsAt, capacity (integer > 0)" },
       { status: 400 },
     );
   }
   const date = new Date(startsAt);
   if (Number.isNaN(date.getTime())) {
-    return NextResponse.json({ error: "startsAt invalida" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid startsAt" }, { status: 400 });
   }
 
   const event = await prisma.event.create({

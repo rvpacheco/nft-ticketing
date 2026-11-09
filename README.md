@@ -74,3 +74,11 @@ npx tsx scripts/test-double-scan.ts
 - NFT metadata is served from the app's own URL, so on localhost the URI in the on-chain metadata is not publicly resolvable. Deploying fixes it; Arweave would decouple it.
 - Devnet only. Mainnet would need: KMS for the server keypair, careful Merkle tree sizing (creation cost scales with depth), and rate-limit handling on paid RPC tiers.
 - Offline scanner mode (pre-downloaded ticket list, sync later) is a known pattern, deliberately excluded: it reintroduces double-entry risk across doors.
+
+## Roadmap
+
+Planned work is tracked in [ROADMAP.md](ROADMAP.md).
+
+## License
+
+[MIT](LICENSE) © Rodolfo Pacheco

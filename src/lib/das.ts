@@ -1,9 +1,9 @@
-// Consulta DAS (Helius) del owner actual de un cNFT.
+// DAS (Helius) lookup of a cNFT's current owner.
 
 /**
- * Devuelve el owner del asset, o null si el indexer no respondio a
- * tiempo (el caller decide si tolera el skip; la fuente de verdad del
- * "no usado" es la DB).
+ * Returns the asset owner, or null if the indexer didn't respond in
+ * time (the caller decides whether to tolerate the skip; the source of truth for
+ * "not used" is the DB).
  */
 export async function getAssetOwner(
   assetId: string,

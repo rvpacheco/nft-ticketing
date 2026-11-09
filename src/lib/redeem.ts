@@ -8,22 +8,22 @@ import { QR_CLOCK_SKEW_MS, qrMessage, type QrPayload } from "./qr";
 export type RedeemOutcome = {
   granted: boolean;
   result: RedemptionResult;
-  /** Mensaje para mostrar en el scanner */
+  /** Message to show on the scanner */
   message: string;
-  /** Datos del ticket para que el portero confirme visualmente */
+  /** Ticket data so door staff can confirm visually */
   ticket?: { buyerEmail: string; tier: string; eventName: string };
   chainCheckSkipped: boolean;
 };
 
 /**
- * Cadena de verificacion del QR de entrada. Orden:
- *  1. ticket existe y esta en un estado canjeable
- *  2. el scanner es promotor/staff del evento del ticket
- *  3. QR no expirado (con margen por relojes)
- *  4. firma ed25519 valida de la wallet del ticket
- *  5. ownership on-chain via DAS (tolerante a timeout: skip + log)
- *  6. update atomico MINTED -> USED (imposible doble entrada)
- * Todos los intentos quedan en RedemptionLog.
+ * Entry QR verification chain. Order:
+ *  1. ticket exists and is in a redeemable state
+ *  2. the scanner is promoter/staff for the ticket's event
+ *  3. QR not expired (with clock-skew margin)
+ *  4. valid ed25519 signature from the ticket's wallet
+ *  5. on-chain ownership via DAS (timeout-tolerant: skip + log)
+ *  6. atomic update MINTED -> USED (double entry impossible)
+ * Every attempt is recorded in RedemptionLog.
  */
 export async function redeemTicket(
   payload: QrPayload,
@@ -35,12 +35,12 @@ export async function redeemTicket(
     include: { event: { select: { name: true, promoterId: true } } },
   });
 
-  // Sin ticket no hay FK para loguear; respuesta directa.
+  // Without a ticket there's no FK to log against; respond directly.
   if (!ticket || ticket.status === "REVOKED") {
     return {
       granted: false,
       result: "TICKET_NOT_FOUND",
-      message: ticket ? "Ticket anulado" : "Ticket inexistente",
+      message: ticket ? "Ticket revoked" : "Ticket does not exist",
       chainCheckSkipped: false,
     };
   }
@@ -68,26 +68,26 @@ export async function redeemTicket(
     };
   };
 
-  // 2. El scanner debe ser promotor/staff del evento de ESTE ticket
+  // 2. The scanner must be promoter/staff for THIS ticket's event
   if (!allowedPromoterIds.includes(ticket.event.promoterId)) {
     return finish(
       "NOT_AUTHORIZED",
-      "No estas autorizado para este evento",
+      "You are not authorized for this event",
     );
   }
 
   if (ticket.status === "PENDING" || ticket.status === "ASSIGNED") {
-    return finish("TICKET_NOT_FOUND", "El ticket aun no tiene NFT emitido");
+    return finish("TICKET_NOT_FOUND", "The ticket has no NFT issued yet");
   }
 
-  // 2. Expiracion
+  // 2. Expiry
   if (payload.e + QR_CLOCK_SKEW_MS < Date.now()) {
-    return finish("EXPIRED_QR", "QR vencido — pide que recargue la pantalla");
+    return finish("EXPIRED_QR", "QR expired — ask them to reload the screen");
   }
 
-  // 3. Firma de la wallet del comprador
+  // 3. Buyer wallet signature
   if (!ticket.walletAddress) {
-    return finish("INVALID_SIGNATURE", "Ticket sin wallet asociada");
+    return finish("INVALID_SIGNATURE", "Ticket has no linked wallet");
   }
   let signatureOk = false;
   try {
@@ -103,7 +103,7 @@ export async function redeemTicket(
     return finish("INVALID_SIGNATURE", "Firma invalida — QR no autentico");
   }
 
-  // 4. Ownership on-chain (tolerante a fallos del indexer)
+  // 4. On-chain ownership (tolerant of indexer failures)
   let chainCheckSkipped = false;
   if (ticket.nftAssetId) {
     const owner = await getAssetOwner(ticket.nftAssetId);
@@ -112,21 +112,21 @@ export async function redeemTicket(
     } else if (owner !== ticket.walletAddress) {
       return finish(
         "OWNERSHIP_MISMATCH",
-        "El NFT ya no pertenece a esta wallet",
+        "The NFT no longer belongs to this wallet",
       );
     }
   } else {
     chainCheckSkipped = true;
   }
 
-  // 5. Canje atomico: solo una request puede ganar esta transicion
+  // 5. Atomic redemption: only one request can win this transition
   const { count } = await prisma.ticket.updateMany({
     where: { id: ticket.id, status: "MINTED" },
     data: { status: "USED" },
   });
   if (count === 0) {
-    return finish("ALREADY_USED", "Ticket YA USADO", chainCheckSkipped);
+    return finish("ALREADY_USED", "Ticket ALREADY USED", chainCheckSkipped);
   }
 
-  return finish("GRANTED", "Entrada concedida", chainCheckSkipped);
+  return finish("GRANTED", "Entry granted", chainCheckSkipped);
 }

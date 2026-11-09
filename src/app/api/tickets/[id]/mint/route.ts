@@ -3,15 +3,15 @@ import { getAuthedPromoter } from "@/lib/auth";
 import { mintTicket } from "@/lib/mint";
 import { prisma } from "@/lib/prisma";
 
-// Reintento manual de mint por el promotor (para tickets ASSIGNED
-// cuyo mint automatico fallo).
+// Manual mint retry by the promoter (for ASSIGNED tickets
+// whose automatic mint failed).
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -19,11 +19,11 @@ export async function POST(
     where: { id, event: { promoterId: promoter.id } },
   });
   if (!ticket) {
-    return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
   }
   if (ticket.status !== "ASSIGNED") {
     return NextResponse.json(
-      { error: `El ticket esta en ${ticket.status}, solo se mintea desde ASSIGNED` },
+      { error: `Ticket is ${ticket.status}, it can only be minted from ASSIGNED` },
       { status: 409 },
     );
   }
@@ -32,9 +32,9 @@ export async function POST(
     const updated = await mintTicket(id);
     return NextResponse.json(updated);
   } catch (err) {
-    console.error(`Mint manual fallo para ticket ${id}:`, err);
+    console.error(`Manual mint failed for ticket ${id}:`, err);
     return NextResponse.json(
-      { error: "El mint fallo, revisa el balance del server wallet y reintenta" },
+      { error: "Mint failed, check the server wallet balance and retry" },
       { status: 502 },
     );
   }

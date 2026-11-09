@@ -47,7 +47,7 @@ export default function EventPage({
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) setEvent(await res.json());
-    else setError("Evento no encontrado");
+    else setError("Event not found");
   }, [getAccessToken, id]);
 
   useEffect(() => {
@@ -63,14 +63,14 @@ export default function EventPage({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      setError(body?.error ?? "Error minteando el ticket");
+      setError(body?.error ?? "Error minting the ticket");
     }
     await load();
   }
 
   async function reassign(ticketId: string, currentEmail: string) {
     const newEmail = window.prompt(
-      `Reasignar ticket de ${currentEmail} a (nuevo email):`,
+      `Reassign ticket from ${currentEmail} to (new email):`,
     );
     if (!newEmail) return;
     setError(null);
@@ -85,7 +85,7 @@ export default function EventPage({
     });
     if (!res.ok) {
       const body = await res.json().catch(() => null);
-      setError(body?.error ?? "Error reasignando");
+      setError(body?.error ?? "Error reassigning");
     }
     await load();
   }
@@ -108,7 +108,7 @@ export default function EventPage({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        setError(body?.error ?? "Error creando el ticket");
+        setError(body?.error ?? "Error creating the ticket");
         return;
       }
       await load();
@@ -122,17 +122,17 @@ export default function EventPage({
     return (
       <main className="flex flex-1 items-center justify-center p-8">
         <button onClick={login} className="rounded-lg bg-black px-6 py-3 text-white dark:bg-white dark:text-black">
-          Iniciar sesión
+          Log in
         </button>
       </main>
     );
   }
-  if (!event) return <main className="p-8">{error ?? "Cargando evento…"}</main>;
+  if (!event) return <main className="p-8">{error ?? "Loading event…"}</main>;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 p-8">
       <Link href="/dashboard" className="text-sm text-gray-500 underline">
-        ← Mis eventos
+        ← My events
       </Link>
       <h1 className="mt-2 text-2xl font-bold">{event.name}</h1>
       <p className="mb-6 text-gray-500">
@@ -148,7 +148,7 @@ export default function EventPage({
         <input
           name="buyerEmail"
           type="email"
-          placeholder="email del comprador"
+          placeholder="buyer email"
           required
           className="flex-1 rounded border px-3 py-2 dark:bg-transparent"
         />
@@ -162,7 +162,7 @@ export default function EventPage({
           disabled={saving}
           className="rounded bg-black px-4 py-2 font-medium text-white disabled:opacity-50 dark:bg-white dark:text-black"
         >
-          {saving ? "…" : "Crear ticket"}
+          {saving ? "…" : "Create ticket"}
         </button>
       </form>
 
@@ -173,8 +173,8 @@ export default function EventPage({
           <tr className="border-b text-left text-gray-500">
             <th className="py-2">Email</th>
             <th>Tier</th>
-            <th>Estado</th>
-            <th>Creado</th>
+            <th>Status</th>
+            <th>Created</th>
             <th></th>
           </tr>
         </thead>
@@ -191,9 +191,9 @@ export default function EventPage({
                   <button
                     onClick={() => retryMint(t.id)}
                     className="ml-2 text-xs underline"
-                    title="Reintentar el mint del cNFT"
+                    title="Retry the cNFT mint"
                   >
-                    Mintear
+                    Mint
                   </button>
                 )}
               </td>
@@ -205,9 +205,9 @@ export default function EventPage({
                   <button
                     onClick={() => reassign(t.id, t.buyerEmail)}
                     className="text-xs underline"
-                    title="Pasar el ticket a otro email (typo o reventa)"
+                    title="Move the ticket to another email (typo or resale)"
                   >
-                    Reasignar
+                    Reassign
                   </button>
                 )}
               </td>
@@ -216,7 +216,7 @@ export default function EventPage({
           {event.tickets.length === 0 && (
             <tr>
               <td colSpan={5} className="py-4 text-gray-500">
-                Sin tickets todavía. Crea el primero con el email del comprador.
+                No tickets yet. Create the first one with the buyer email.
               </td>
             </tr>
           )}

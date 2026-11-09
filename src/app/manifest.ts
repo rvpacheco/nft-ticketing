@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Ticketera",
     short_name: "Ticketera",
-    description: "Tickets de eventos como NFTs en Solana",
+    description: "Event tickets as NFTs on Solana",
     start_url: "/scan",
     display: "standalone",
     background_color: "#000000",

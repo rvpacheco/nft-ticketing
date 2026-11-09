@@ -10,7 +10,7 @@ export async function POST(
 ) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -18,7 +18,7 @@ export async function POST(
   const buyerEmail = String(body?.buyerEmail ?? "").trim().toLowerCase();
   const tier = String(body?.tier ?? "general").trim() || "general";
   if (!EMAIL_RE.test(buyerEmail)) {
-    return NextResponse.json({ error: "Email invalido" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
   const event = await prisma.event.findFirst({
@@ -26,10 +26,10 @@ export async function POST(
     include: { _count: { select: { tickets: { where: { status: { not: "REVOKED" } } } } } },
   });
   if (!event) {
-    return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
   if (event._count.tickets >= event.capacity) {
-    return NextResponse.json({ error: "Evento agotado (capacidad llena)" }, { status: 409 });
+    return NextResponse.json({ error: "Event sold out (capacity reached)" }, { status: 409 });
   }
 
   const ticket = await prisma.ticket.create({

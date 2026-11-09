@@ -3,7 +3,7 @@ import { getScannerContext } from "@/lib/auth";
 import { redeemTicket } from "@/lib/redeem";
 import type { QrPayload } from "@/lib/qr";
 
-// Canje en puerta. Solo promotores o staff registrado pueden escanear.
+// Door redemption. Only promoters or registered staff can scan.
 export async function POST(req: Request) {
   const scanner = await getScannerContext(req);
   if (!scanner) {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       {
         granted: false,
         result: "NOT_AUTHORIZED",
-        message: "Tu email no esta registrado como staff de ningun evento",
+        message: "Your email is not registered as staff for any event",
       },
       { status: 403 },
     );
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   let payload: QrPayload;
   try {
     const body = await req.json();
-    // El scanner manda el texto del QR tal cual (JSON string)
+    // The scanner sends the QR text as-is (JSON string)
     payload = typeof body.qr === "string" ? JSON.parse(body.qr) : body.qr;
     if (
       typeof payload?.t !== "string" ||
@@ -28,11 +28,11 @@ export async function POST(req: Request) {
       typeof payload?.n !== "string" ||
       typeof payload?.s !== "string"
     ) {
-      throw new Error("forma invalida");
+      throw new Error("invalid shape");
     }
   } catch {
     return NextResponse.json(
-      { granted: false, result: "TICKET_NOT_FOUND", message: "QR ilegible" },
+      { granted: false, result: "TICKET_NOT_FOUND", message: "Unreadable QR" },
       { status: 400 },
     );
   }

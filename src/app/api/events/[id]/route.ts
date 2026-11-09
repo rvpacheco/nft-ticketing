@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
@@ -17,7 +17,7 @@ export async function GET(
     include: { tickets: { orderBy: { createdAt: "desc" } } },
   });
   if (!event) {
-    return NextResponse.json({ error: "Evento no encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Event not found" }, { status: 404 });
   }
 
   return NextResponse.json(event);

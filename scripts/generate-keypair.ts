@@ -1,6 +1,6 @@
-// Genera el keypair del servidor para devnet y pide un airdrop de 2 SOL.
-// Uso: npx tsx scripts/generate-keypair.ts
-// Pega la linea SERVER_WALLET_SECRET_KEY que imprime en tu .env (nunca en git).
+// Generates the server keypair for devnet and requests a 2 SOL airdrop.
+// Usage: npx tsx scripts/generate-keypair.ts
+// Paste the SERVER_WALLET_SECRET_KEY line it prints into your .env (never into git).
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 const RPC = process.env.SOLANA_RPC_URL ?? "https://api.devnet.solana.com";
@@ -14,7 +14,7 @@ async function main() {
 
   const connection = new Connection(RPC, "confirmed");
   try {
-    console.log("\nPidiendo airdrop de 2 SOL en devnet...");
+    console.log("\nRequesting a 2 SOL airdrop on devnet...");
     const sig = await connection.requestAirdrop(
       keypair.publicKey,
       2 * LAMPORTS_PER_SOL,
@@ -24,8 +24,8 @@ async function main() {
     console.log("Balance:", balance / LAMPORTS_PER_SOL, "SOL");
   } catch (err) {
     console.error(
-      "Airdrop fallo (los faucets de devnet se agotan seguido).",
-      "Reintenta luego o usa https://faucet.solana.com con la public key de arriba.",
+      "Airdrop failed (devnet faucets run dry often).",
+      "Retry later or use https://faucet.solana.com with the public key above.",
     );
     console.error(String(err));
   }

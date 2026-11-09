@@ -2,18 +2,18 @@ import { NextResponse } from "next/server";
 import { privy, verifyRequest } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Upsert del promotor tras login: crea su fila la primera vez que entra.
+// Promoter upsert after login: creates their row on first sign-in.
 export async function POST(req: Request) {
   const claims = await verifyRequest(req);
   if (!claims) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const user = await privy.getUserById(claims.userId);
   const email = user.email?.address;
   if (!email) {
     return NextResponse.json(
-      { error: "La cuenta de Privy no tiene email" },
+      { error: "The Privy account has no email" },
       { status: 400 },
     );
   }

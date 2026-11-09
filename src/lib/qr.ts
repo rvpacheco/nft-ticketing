@@ -1,25 +1,25 @@
-// Formato del QR de entrada, compartido entre el cliente (firma) y
-// el endpoint de redeem (verificacion).
+// Entry QR format, shared between the client (signing) and
+// the redeem endpoint (verification).
 
-/** Vida util de cada QR. El cliente rota antes de que expire. */
+/** Lifetime of each QR. The client rotates before it expires. */
 export const QR_TTL_MS = 45_000;
 
-/** Margen de gracia del server al validar exp (relojes desfasados). */
+/** Server grace period when validating exp (clock skew). */
 export const QR_CLOCK_SKEW_MS = 5_000;
 
-/** Contenido del QR (JSON compacto). */
+/** QR content (compact JSON). */
 export type QrPayload = {
   /** ticketId */
   t: string;
-  /** expiracion en epoch ms */
+  /** expiry in epoch ms */
   e: number;
-  /** nonce aleatorio */
+  /** random nonce */
   n: string;
-  /** firma ed25519 en base58 del mensaje canonico */
+  /** base58 ed25519 signature of the canonical message */
   s: string;
 };
 
-/** Mensaje canonico que firma la wallet del comprador. */
+/** Canonical message signed by the buyer's wallet. */
 export function qrMessage(ticketId: string, exp: number, nonce: string) {
   return `tkt|${ticketId}|${exp}|${nonce}`;
 }

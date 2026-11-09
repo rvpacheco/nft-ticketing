@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function GET(req: Request) {
   const buyer = await getBuyerContext(req);
   if (!buyer) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const tickets = await prisma.ticket.findMany({

@@ -8,16 +8,16 @@ export async function DELETE(
 ) {
   const promoter = await getAuthedPromoter(req);
   if (!promoter) {
-    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
-  // deleteMany con promoterId: nadie borra staff ajeno
+  // deleteMany scoped by promoterId: nobody can delete another promoter's staff
   const { count } = await prisma.staff.deleteMany({
     where: { id, promoterId: promoter.id },
   });
   if (count === 0) {
-    return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
   return NextResponse.json({ ok: true });
 }
